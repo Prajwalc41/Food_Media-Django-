@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block title %}{{ restaurant.full_name }} — Food Media{% endblock %}
+{% block content %}
+<div class="container">
+
+  <!-- Profile Header -->
+  <div class="profile-header card" style="margin-bottom:24px;">
+    <div class="card-body">
+      {% if restaurant.profile_picture %}
+        <img src="{{ restaurant.profile_picture.url }}" alt="{{ restaurant.full_name }}" class="profile-avatar">
+      {% else %}
+        <div class="profile-avatar-placeholder">{{ restaurant.full_name|first|upper }}</div>
+      {% endif %}
+
+      <h1 class="profile-name">{{ restaurant.full_name }}</h1>
+      <p class="profile-username">@{{ restaurant.username }}</p>
+
+      <!-- Star Rating Display -->
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;">
+        {% if restaurant.star_rating_count > 0 %}
+          {% with avg=restaurant.average_star_rating %}
+          <div class="stars-display">
+            {% for i in "12345" %}
+              {% if forloop.counter <= avg|floatformat:"0"|add:"0"|truncatechars:"1" %}
+                <span class="star filled">★</span>
+              {% else %}
+                <span class="star">☆</span>
+              {% endif %}
+            {% endfor %}
+          </div>
+          <span class="star-rating-text">{{ restaurant.average_star_rating }}</span>
+          <span class="star-rating-count">({{ restaurant.star_rating_count }} rating{{ restaurant.star_rating_count|pluralize }})</span>
+          {% endwith %}
+        {% else %}
+          <span class="text-muted" style="font-style:italic;">Not yet rated</span>
+        {% endif %}
+      </div>
+
+      {% if restaurant.bio %}<p class="profile-bio">{{ restaurant.bio }}</p>{% endif %}
+
+      <div style="max-width:400px;margin:0 auto 16px;">
+        {% if restaurant.restaurant_address %}
+        <div class="info-row"><span class="info-row__icon">📍</span><span>{{ restaurant.restaurant_address }}</span></div>
+        {% endif %}
+        {% if restaurant.contact_number %}
+        <div class="info-row"><span class="info-row__icon">📞</span><span>{{ restaurant.contact_number }}</span></div>
+        {% endif %}
+      </div>
+
+      {% if is_own_profile %}
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:8px;">
+          <a href="{% url 'edit_profile' %}" class="btn btn-outline btn-sm" id="btn-edit-restaurant-profile">Edit Profile ✏️</a>
+          <form method="post" action="{% url 'logout' %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline btn-sm" style="color:var(--color-error);border-color:var(--color-error);">Logout 🚪</button>
+          </form>
+        </div>
+      {% elif user.is_enthusiast %}
+        <!-- Star Rating Widget -->
+        <div style="border-top:1px solid var(--color-border);padding-top:20px;margin-top:8px;">
+          <h3 style="font-size:15px;margin-bottom:12px;">Rate This Restaurant</h3>
+          <form method="post" action="{% url 'rate_restaurant' username=restaurant.username %}">
+            {% csrf_token %}
+            <div class="star-widget" id="star-widget">
+              {% for i in star_range %}
+                <span class="star-input {% if user_rating and i <= user_rating.score %}selected{% endif %}" data-value="{{ i }}" onclick="selectStar({{ i }})" id="star-{{ i }}">★</span>
+              {% endfor %}
+            </div>
+            <input type="hidden" name="score" id="star-score" value="{{ user_rating.score|default:'' }}">
+            <button type="submit" class="btn btn-primary btn-sm" id="btn-rate-restaurant" {% if not user_rating %}disabled{% endif %}>
+              {% if user_rating %}Update My Rating{% else %}Rate This Restaurant{% endif %}
+            </button>
+          </form>
+          {% if user_rating %}<p class="text-muted" style="font-size:13px;margin-top:8px;">Your current rating: {{ user_rating.score }}★</p>{% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Dish Gallery -->
+  <div class="section-header"><h2 class="section-title">Dishes ({{ posts.count }})</h2></div>
+  {% if posts %}
+  <div class="gallery-grid">
+    {% for post in posts %}
+    <a href="{% url 'post_detail' pk=post.pk %}" class="gallery-item">
+      <img src="{{ post.image.url }}" alt="{{ post.dish_name }}" loading="lazy">
+      <div class="gallery-overlay">❤️ {{ post.like_count }} &nbsp; 💬 {{ post.comment_count }}</div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state"><div class="empty-state__icon">🍳</div><p class="empty-state__text">No dishes yet. Stay tuned!</p></div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+var selectedStar = {{ user_rating.score|default:0 }};
+function selectStar(val) {
+  selectedStar = val;
+  document.getElementById('star-score').value = val;
+  document.querySelectorAll('.star-input').forEach(function(s, i){
+    s.classList.toggle('selected', i < val);
+  });
+  document.getElementById('btn-rate-restaurant').disabled = false;
+  document.getElementById('btn-rate-restaurant').textContent = 'Rate This Restaurant';
+}
+</script>
+{% endblock %}

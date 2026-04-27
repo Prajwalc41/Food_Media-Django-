@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Discover — Food Media{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <h1 class="page-title">🔍 Discover</h1>
+    <p class="text-muted">Find restaurants and explore food stories</p>
+  </div>
+
+  <!-- Search -->
+  <form method="get" action="{% url 'discover' %}" style="margin-bottom:24px;">
+    <div class="search-bar">
+      <input class="form-control" type="text" name="q" id="id_search" placeholder="Search restaurants by name or location..." value="{{ query }}">
+      <button type="submit" class="btn btn-primary" id="btn-search">Search</button>
+    </div>
+  </form>
+
+  <!-- Search Results -->
+  {% if query %}
+    {% if restaurants %}
+      <div class="section-header"><h2 class="section-title">Results for "{{ query }}"</h2></div>
+      {% for r in restaurants %}
+      <div class="card restaurant-result" style="margin-bottom:12px;">
+        {% if r.profile_picture %}
+          <img src="{{ r.profile_picture.url }}" alt="{{ r.full_name }}" class="restaurant-result__avatar">
+        {% else %}
+          <div class="restaurant-result__avatar-placeholder">{{ r.full_name|first|upper }}</div>
+        {% endif %}
+        <div class="restaurant-result__info">
+          <div class="restaurant-result__name">{{ r.full_name }}</div>
+          {% if r.restaurant_address %}<div class="restaurant-result__address">📍 {{ r.restaurant_address }}</div>{% endif %}
+          {% if r.star_rating_count > 0 %}
+            <div class="text-muted" style="font-size:13px;margin-top:4px;">⭐ {{ r.average_star_rating }} ({{ r.star_rating_count }} rating{{ r.star_rating_count|pluralize }})</div>
+          {% else %}
+            <div class="text-muted" style="font-size:13px;margin-top:4px;">Not yet rated</div>
+          {% endif %}
+        </div>
+        <a href="{% url 'restaurant_profile' username=r.username %}" class="btn btn-outline btn-sm" id="view-profile-{{ r.username }}">View Profile</a>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state__icon">🌶️</div>
+        <p class="empty-state__text">No restaurants found for "{{ query }}". Try a different ingredient!</p>
+      </div>
+    {% endif %}
+    <hr style="border:none;border-top:1px solid var(--color-border);margin:32px 0;">
+  {% endif %}
+
+  <!-- Food History Articles -->
+  <div class="section-header"><h2 class="section-title">📖 Food History</h2></div>
+  {% if articles %}
+  <div class="articles-grid">
+    {% for article in articles %}
+    <div class="card article-card">
+      {% if article.cover_image %}
+        <img src="{{ article.cover_image.url }}" alt="{{ article.title }}" class="article-card__img">
+      {% else %}
+        <div class="article-card__img-placeholder">🍜</div>
+      {% endif %}
+      <div class="article-card__body">
+        <div class="article-card__title">{{ article.title }}</div>
+        <p class="article-card__snippet">{{ article.content|truncatechars:150 }}</p>
+        <a href="{% url 'food_history_detail' pk=article.pk %}" class="btn btn-outline btn-sm" id="read-article-{{ article.pk }}">Read More →</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-state__icon">📖</div>
+    <p class="empty-state__text">The food stories are still simmering... Check back soon!</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

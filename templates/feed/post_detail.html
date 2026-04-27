@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}{{ post.dish_name }} — Food Media{% endblock %}
+{% block content %}
+<div class="container">
+  <div style="padding:12px 0;"><a href="{% url 'feed' %}" style="color:var(--color-sage);font-weight:600;">← Back to Feed</a></div>
+
+  <div class="card post-card" style="margin-bottom:24px;">
+    <div class="post-card__header">
+      <a href="{% url 'restaurant_profile' username=post.restaurant.username %}">
+        {% if post.restaurant.profile_picture %}
+          <img src="{{ post.restaurant.profile_picture.url }}" alt="{{ post.restaurant.full_name }}" class="post-card__avatar">
+        {% else %}
+          <div class="post-card__avatar-placeholder">{{ post.restaurant.full_name|first|upper }}</div>
+        {% endif %}
+      </a>
+      <div>
+        <a href="{% url 'restaurant_profile' username=post.restaurant.username %}" class="post-card__restaurant-name">{{ post.restaurant.full_name }}</a>
+        <div class="post-card__time text-muted">{{ post.created_at|timesince }} ago</div>
+      </div>
+    </div>
+    <img src="{{ post.image.url }}" alt="{{ post.dish_name }}" class="post-card__image">
+    <div class="post-card__body">
+      <div class="post-card__dish-name">{{ post.dish_name }}</div>
+      {% if post.caption %}<p class="post-card__caption">{{ post.caption }}</p>{% endif %}
+    </div>
+    <div class="post-card__actions">
+      {% if user.is_enthusiast %}
+        <button class="action-btn {% if liked %}liked{% endif %}" id="like-btn-{{ post.pk }}" onclick="toggleLike({{ post.pk }})">
+          <span id="like-icon-{{ post.pk }}">{% if liked %}❤️{% else %}🤍{% endif %}</span>
+          <span id="like-count-{{ post.pk }}">{{ post.like_count }}</span>
+        </button>
+      {% else %}
+        <span class="action-btn disabled">🤍 {{ post.like_count }}</span>
+      {% endif %}
+      <span class="action-btn disabled">💬 {{ post.comment_count }}</span>
+      {% if user == post.restaurant or user.is_staff %}
+        <form method="post" action="{% url 'delete_post' pk=post.pk %}" style="margin-left:auto;" onsubmit="return confirm('Delete this post?');">
+          {% csrf_token %}<button type="submit" class="action-btn" style="color:var(--color-error);">🗑️ Delete Post</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Comments -->
+  <div class="section-header"><h2 class="section-title">Comments</h2></div>
+
+  {% if comments %}
+    {% for comment in comments %}
+    <div class="comment">
+      {% if comment.author and comment.author.profile_picture %}
+        <img src="{{ comment.author.profile_picture.url }}" alt="" class="comment__avatar">
+      {% else %}
+        <div class="comment__avatar-placeholder">{{ comment.author.username|first|upper|default:"?" }}</div>
+      {% endif %}
+      <div class="comment__body">
+        <div class="comment__meta">
+          <span class="comment__username">{{ comment.author.username|default:"Deleted User" }}</span>
+          <span class="comment__time">{{ comment.created_at|timesince }} ago</span>
+          {% if user == comment.author or user == post.restaurant or user.is_staff %}
+            <form method="post" action="{% url 'delete_comment' pk=post.pk cid=comment.pk %}" style="margin-left:auto;">
+              {% csrf_token %}<button type="submit" class="comment__delete" title="Delete comment" onclick="return confirm('Delete this comment?');">🗑️</button>
+            </form>
+          {% endif %}
+        </div>
+        <p class="comment__text">{{ comment.text }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state" style="padding:32px 0;">
+      <div class="empty-state__icon">💬</div>
+      <p class="empty-state__text">No reviews yet. Be the first to taste and tell!</p>
+    </div>
+  {% endif %}
+
+  {% if can_comment %}
+  <div style="margin-top:24px;">
+    <h3 style="margin-bottom:12px;font-size:16px;">Add a Comment</h3>
+    <form method="post" action="{% url 'add_comment' pk=post.pk %}">
+      {% csrf_token %}
+      <div class="form-group">
+        <textarea class="form-control" name="text" id="id_comment_text" placeholder="Share your thoughts on this dish..." rows="3" maxlength="500" required></textarea>
+        <div class="char-counter"><span id="comment-count">0</span>/500</div>
+      </div>
+      <button type="submit" class="btn btn-primary" id="btn-submit-comment">Post Comment 💬</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+var el = document.getElementById('id_comment_text');
+if(el) el.addEventListener('input', function(){document.getElementById('comment-count').textContent = this.value.length;});
+
+function toggleLike(pk) {
+  fetch('/post/' + pk + '/like/', {
+    method: 'POST',
+    headers: {'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json'}
+  }).then(r => r.json()).then(d => {
+    document.getElementById('like-icon-' + pk).textContent = d.liked ? '❤️' : '🤍';
+    document.getElementById('like-count-' + pk).textContent = d.like_count;
+    document.getElementById('like-btn-' + pk).classList.toggle('liked', d.liked);
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}My Uploads — Food Media{% endblock %}
+{% block content %}
+<div class="container--wide container">
+  <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+    <div>
+      <h1 class="page-title">📁 My Uploads</h1>
+      <p class="text-muted">{{ posts.count }} dish{{ posts.count|pluralize }} plated</p>
+    </div>
+    <a href="{% url 'create_post' %}" class="btn btn-primary" id="btn-new-post">+ New Dish</a>
+  </div>
+
+  {% if posts %}
+  <div class="upload-grid">
+    {% for post in posts %}
+    <div class="card upload-card">
+      <a href="{% url 'post_detail' pk=post.pk %}">
+        <img src="{{ post.image.url }}" alt="{{ post.dish_name }}" class="upload-card__img">
+      </a>
+      <div class="card-body">
+        <div class="upload-card__name">{{ post.dish_name }}</div>
+        <div class="upload-card__stats">
+          <span>❤️ {{ post.like_count }}</span>
+          <span>💬 {{ post.comment_count }}</span>
+        </div>
+        <div style="margin-top:10px;">
+          <button class="btn btn-danger btn-sm btn-block" id="delete-btn-{{ post.pk }}" onclick="openDeleteModal({{ post.pk }}, '{{ post.dish_name|escapejs }}')">🗑️ Delete</button>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-state__icon">🔪</div>
+    <p class="empty-state__text">You haven't plated anything yet. Start cooking!</p>
+    <a href="{% url 'create_post' %}" class="btn btn-primary" style="margin-top:16px;">Upload Your First Dish</a>
+  </div>
+  {% endif %}
+
+  <!-- Delete Modal -->
+  <div class="modal-overlay" id="delete-modal" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modal__title">⚠️ Delete Dish?</div>
+      <p class="modal__text">Are you sure you want to delete "<strong id="modal-dish-name"></strong>"? This cannot be undone.</p>
+      <div class="modal__actions">
+        <button class="btn btn-outline btn-sm" onclick="closeDeleteModal()" id="btn-cancel-delete">Cancel</button>
+        <form method="post" id="delete-form" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger btn-sm" id="btn-confirm-delete">Yes, Delete It</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function openDeleteModal(pk, name) {
+  document.getElementById('modal-dish-name').textContent = name;
+  document.getElementById('delete-form').action = '/post/' + pk + '/delete/';
+  document.getElementById('delete-modal').classList.add('active');
+}
+function closeDeleteModal() {
+  document.getElementById('delete-modal').classList.remove('active');
+}
+document.getElementById('delete-modal').addEventListener('click', function(e){
+  if(e.target === this) closeDeleteModal();
+});
+</script>
+{% endblock %}

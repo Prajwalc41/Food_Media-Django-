@@ -1,0 +1,163 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register — Food Media</title>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+<div class="toast-container" id="toast-container">
+  {% for message in messages %}
+  <div class="toast {{ message.tags }}">{{ message }}</div>
+  {% endfor %}
+</div>
+
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-logo">🍴 Food Media</div>
+      <p class="auth-subtitle">Join the culinary community</p>
+    </div>
+    <div class="auth-body">
+      <div class="role-tabs" role="tablist">
+        <button type="button" class="role-tab {% if active_tab == 'enthusiast' %}active{% endif %}" id="tab-enthusiast" role="tab" onclick="switchTab('enthusiast')">🍽️ Food Enthusiast</button>
+        <button type="button" class="role-tab {% if active_tab == 'restaurant' %}active{% endif %}" id="tab-restaurant" role="tab" onclick="switchTab('restaurant')">🏪 Restaurant</button>
+      </div>
+
+      <!-- Enthusiast Form -->
+      <div id="form-enthusiast" {% if active_tab != 'enthusiast' %}style="display:none"{% endif %}>
+        <form method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="role" value="enthusiast">
+
+          <div class="form-group">
+            <label class="form-label" for="id_ent_full_name">Full Name</label>
+            <input class="form-control" type="text" name="full_name" id="id_ent_full_name" placeholder="Your full name" maxlength="100" value="{{ ent_form.full_name.value|default:'' }}" required>
+            {% if ent_form.full_name.errors %}<p class="form-error">{{ ent_form.full_name.errors.0 }}</p>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="id_ent_username">Username</label>
+            <input class="form-control" type="text" name="username" id="id_ent_username" placeholder="e.g. foodie_raj" maxlength="50" value="{{ ent_form.username.value|default:'' }}" required>
+            {% if ent_form.username.errors %}<p class="form-error">{{ ent_form.username.errors.0 }}</p>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="id_ent_email">Email</label>
+            <input class="form-control" type="email" name="email" id="id_ent_email" placeholder="you@example.com" value="{{ ent_form.email.value|default:'' }}" required>
+            {% if ent_form.email.errors %}<p class="form-error">{{ ent_form.email.errors.0 }}</p>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="id_password_ent">Password</label>
+            <input class="form-control" type="password" name="password" id="id_password_ent" placeholder="Min 8 chars with a number" required>
+            {% if ent_form.password.errors %}<p class="form-error">{{ ent_form.password.errors.0 }}</p>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="id_confirm_password_ent">Confirm Password</label>
+            <input class="form-control" type="password" name="confirm_password" id="id_confirm_password_ent" placeholder="Repeat password" required>
+            {% if ent_form.confirm_password.errors %}<p class="form-error">{{ ent_form.confirm_password.errors.0 }}</p>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="id_ent_pic">Profile Picture <span class="text-muted">(optional)</span></label>
+            <input class="form-control" type="file" name="profile_picture" id="id_ent_pic" accept="image/jpeg,image/png,image/webp">
+            <p class="form-help">JPG, PNG or WEBP · Max 2MB</p>
+            {% if ent_form.profile_picture.errors %}<p class="form-error">{{ ent_form.profile_picture.errors.0 }}</p>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="id_ent_bio">Short Bio <span class="text-muted">(optional)</span></label>
+            <textarea class="form-control" name="bio" id="id_ent_bio" placeholder="What do you love to eat?" rows="3" maxlength="250">{{ ent_form.bio.value|default:'' }}</textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block" id="btn-register-enthusiast">Create Account 🎉</button>
+        </form>
+      </div>
+
+      <!-- Restaurant Form -->
+      <div id="form-restaurant" {% if active_tab != 'restaurant' %}style="display:none"{% endif %}>
+        <form method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="role" value="restaurant">
+
+          <div class="form-group">
+            <label class="form-label" for="id_res_full_name">Restaurant Name</label>
+            <input class="form-control" type="text" name="full_name" id="id_res_full_name" placeholder="e.g. The Spice Garden" maxlength="150" value="{{ res_form.full_name.value|default:'' }}" required>
+            {% if res_form.full_name.errors %}<p class="form-error">{{ res_form.full_name.errors.0 }}</p>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="id_res_username">Username</label>
+            <input class="form-control" type="text" name="username" id="id_res_username" placeholder="e.g. spice_garden" maxlength="50" value="{{ res_form.username.value|default:'' }}" required>
+            {% if res_form.username.errors %}<p class="form-error">{{ res_form.username.errors.0 }}</p>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="id_res_email">Email</label>
+            <input class="form-control" type="email" name="email" id="id_res_email" placeholder="contact@restaurant.com" value="{{ res_form.email.value|default:'' }}" required>
+            {% if res_form.email.errors %}<p class="form-error">{{ res_form.email.errors.0 }}</p>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="id_password_res">Password</label>
+            <input class="form-control" type="password" name="password" id="id_password_res" placeholder="Min 8 chars with a number" required>
+            {% if res_form.password.errors %}<p class="form-error">{{ res_form.password.errors.0 }}</p>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="id_confirm_password_res">Confirm Password</label>
+            <input class="form-control" type="password" name="confirm_password" id="id_confirm_password_res" placeholder="Repeat password" required>
+            {% if res_form.confirm_password.errors %}<p class="form-error">{{ res_form.confirm_password.errors.0 }}</p>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="id_res_pic">Restaurant Logo <span class="text-muted">(optional)</span></label>
+            <input class="form-control" type="file" name="profile_picture" id="id_res_pic" accept="image/jpeg,image/png,image/webp">
+            <p class="form-help">JPG, PNG or WEBP · Max 2MB</p>
+            {% if res_form.profile_picture.errors %}<p class="form-error">{{ res_form.profile_picture.errors.0 }}</p>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="id_res_address">Physical Address</label>
+            <input class="form-control" type="text" name="restaurant_address" id="id_res_address" placeholder="123 Main St, Bangalore, Karnataka" maxlength="300" value="{{ res_form.restaurant_address.value|default:'' }}" required>
+            {% if res_form.restaurant_address.errors %}<p class="form-error">{{ res_form.restaurant_address.errors.0 }}</p>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="id_res_contact">Contact Number</label>
+            <input class="form-control" type="text" name="contact_number" id="id_res_contact" placeholder="+91 98765 43210" maxlength="20" value="{{ res_form.contact_number.value|default:'' }}" required>
+            {% if res_form.contact_number.errors %}<p class="form-error">{{ res_form.contact_number.errors.0 }}</p>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="id_res_bio">About Your Restaurant <span class="text-muted">(optional)</span></label>
+            <textarea class="form-control" name="bio" id="id_res_bio" placeholder="Tell us about your cuisine, story, specialties..." rows="3" maxlength="500">{{ res_form.bio.value|default:'' }}</textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block" id="btn-register-restaurant">List My Restaurant 🍴</button>
+        </form>
+      </div>
+
+      <p style="text-align:center;margin-top:20px;font-size:14px;color:var(--color-muted-text);">
+        Already have an account? <a href="{% url 'login' %}" style="color:var(--color-sage);font-weight:700;">Sign In</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(role) {
+  document.getElementById('form-enthusiast').style.display = role === 'enthusiast' ? 'block' : 'none';
+  document.getElementById('form-restaurant').style.display = role === 'restaurant' ? 'block' : 'none';
+  document.getElementById('tab-enthusiast').classList.toggle('active', role === 'enthusiast');
+  document.getElementById('tab-restaurant').classList.toggle('active', role === 'restaurant');
+}
+document.querySelectorAll('.toast').forEach(function(t){setTimeout(function(){t.remove();},3500);});
+</script>
+</body>
+</html>

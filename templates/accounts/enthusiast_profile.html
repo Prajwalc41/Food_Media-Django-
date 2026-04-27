@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}{{ profile_user.full_name }} — Food Media{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="profile-header card" style="margin-bottom:24px;">
+    <div class="card-body">
+      {% if profile_user.profile_picture %}
+        <img src="{{ profile_user.profile_picture.url }}" alt="{{ profile_user.full_name }}" class="profile-avatar">
+      {% else %}
+        <div class="profile-avatar-placeholder">{{ profile_user.full_name|first|upper }}</div>
+      {% endif %}
+
+      <h1 class="profile-name">{{ profile_user.full_name }}</h1>
+      <p class="profile-username">@{{ profile_user.username }}</p>
+
+      <div class="foodie-points-badge" style="margin:12px auto;">
+        🌟 {{ profile_user.foodie_points_count }} Foodie Point{{ profile_user.foodie_points_count|pluralize }}
+      </div>
+
+      {% if profile_user.bio %}
+        <p class="profile-bio">{{ profile_user.bio }}</p>
+      {% else %}
+        <p class="profile-bio" style="font-style:italic;color:var(--color-muted-text);">This foodie is a mystery. Their taste speaks louder! 🤫</p>
+      {% endif %}
+
+      <div class="profile-stats" style="margin-bottom:16px;">
+        <div class="stat">
+          <div class="stat__value">{{ profile_user.likes_given.count }}</div>
+          <div class="stat__label">Likes Given</div>
+        </div>
+        <div class="stat">
+          <div class="stat__value">{{ profile_user.comments_written.count }}</div>
+          <div class="stat__label">Comments</div>
+        </div>
+        <div class="stat">
+          <div class="stat__value">{{ profile_user.foodie_points_count }}</div>
+          <div class="stat__label">Foodie Points</div>
+        </div>
+      </div>
+
+      {% if not is_own_profile and user.is_enthusiast %}
+        {% if already_given %}
+          <button class="btn btn-outline btn-sm disabled" id="btn-give-point" disabled>✓ You gave this person a Foodie Point</button>
+        {% else %}
+          <button class="btn btn-primary btn-sm" id="btn-give-point" onclick="giveFoodiePoint('{{ profile_user.username }}')">+ Give Foodie Point 🌟</button>
+        {% endif %}
+      {% endif %}
+
+      {% if is_own_profile %}
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:8px;">
+          <a href="{% url 'edit_profile' %}" class="btn btn-outline btn-sm" id="btn-edit-profile">Edit Profile ✏️</a>
+          <a href="{% url 'change_password' %}" class="btn btn-outline btn-sm" id="btn-change-password">Change Password 🔐</a>
+          <form method="post" action="{% url 'logout' %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline btn-sm" style="color:var(--color-error);border-color:var(--color-error);">Logout 🚪</button>
+          </form>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function giveFoodiePoint(username) {
+  var btn = document.getElementById('btn-give-point');
+  btn.disabled = true;
+  btn.textContent = 'Giving...';
+  fetch('/profile/' + username + '/give-point/', {
+    method: 'POST',
+    headers: {'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json'}
+  }).then(r => r.json()).then(d => {
+    if(d.success) {
+      btn.textContent = '✓ You gave this person a Foodie Point';
+      btn.classList.remove('btn-primary');
+      btn.classList.add('btn-outline', 'disabled');
+      btn.onclick = null;
+    } else {
+      alert(d.error || 'Something went wrong.');
+      btn.disabled = false;
+      btn.textContent = '+ Give Foodie Point 🌟';
+    }
+  });
+}
+</script>
+{% endblock %}

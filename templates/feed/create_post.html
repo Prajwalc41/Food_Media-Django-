@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Upload a Dish — Food Media{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <h1 class="page-title">🍽️ Plate a New Dish</h1>
+    <p class="text-muted">Show the world what you're cooking today!</p>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <div class="card-body" style="padding:28px;">
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <div class="form-group">
+          <label class="form-label" for="id_dish_name">Dish Name *</label>
+          <input class="form-control" type="text" name="dish_name" id="id_dish_name" placeholder="e.g., Butter Chicken, Tiramisu..." maxlength="150" value="{{ form.dish_name.value|default:'' }}" required>
+          {% if form.dish_name.errors %}<p class="form-error">{{ form.dish_name.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="id_image">Dish Photo *</label>
+          <input class="form-control" type="file" name="image" id="id_image" accept="image/jpeg,image/png,image/webp" required>
+          <p class="form-help">JPG, PNG or WEBP · Max 5MB</p>
+          {% if form.image.errors %}<p class="form-error">{{ form.image.errors.0 }}</p>{% endif %}
+          <div id="image-preview-wrapper" style="display:none;margin-top:12px;">
+            <img id="image-preview" src="" alt="Preview" style="max-width:100%;border-radius:12px;max-height:300px;object-fit:cover;">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="id_caption">Caption <span class="text-muted">(optional)</span></label>
+          <textarea class="form-control" name="caption" id="id_caption" placeholder="Tell the story behind this dish..." rows="4" maxlength="500">{{ form.caption.value|default:'' }}</textarea>
+          <div class="char-counter"><span id="caption-count">{{ form.caption.value|default:''|length }}</span>/500</div>
+          {% if form.caption.errors %}<p class="form-error">{{ form.caption.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button type="submit" class="btn btn-primary" id="btn-upload-post">Serve It Up 🍽️</button>
+          <a href="{% url 'my_uploads' %}" class="btn btn-outline">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.getElementById('id_caption').addEventListener('input', function(){
+  document.getElementById('caption-count').textContent = this.value.length;
+});
+document.getElementById('id_image').addEventListener('change', function(){
+  var file = this.files[0];
+  if(file) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('image-preview').src = e.target.result;
+      document.getElementById('image-preview-wrapper').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+});
+</script>
+{% endblock %}

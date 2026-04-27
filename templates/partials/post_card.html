@@ -1,0 +1,52 @@
+{% load static %}
+<div class="card post-card">
+  <div class="post-card__header">
+    <a href="{% url 'restaurant_profile' username=post.restaurant.username %}">
+      {% if post.restaurant.profile_picture %}
+        <img src="{{ post.restaurant.profile_picture.url }}" alt="{{ post.restaurant.full_name }}" class="post-card__avatar">
+      {% else %}
+        <div class="post-card__avatar-placeholder">{{ post.restaurant.full_name|first|upper }}</div>
+      {% endif %}
+    </a>
+    <div>
+      <a href="{% url 'restaurant_profile' username=post.restaurant.username %}" class="post-card__restaurant-name">{{ post.restaurant.full_name }}</a>
+      <div class="post-card__time text-muted">{{ post.created_at|timesince }} ago</div>
+    </div>
+  </div>
+
+  <a href="{% url 'post_detail' pk=post.pk %}">
+    <img src="{{ post.image.url }}" alt="{{ post.dish_name }}" class="post-card__image" loading="lazy">
+  </a>
+
+  <div class="post-card__body">
+    <div class="post-card__dish-name">{{ post.dish_name }}</div>
+    {% if post.caption %}
+      <p class="post-card__caption collapsed" id="caption-{{ post.pk }}">{{ post.caption }}</p>
+      <button class="see-more-btn" onclick="toggleCaption({{ post.pk }})" id="see-more-{{ post.pk }}">See more</button>
+    {% endif %}
+  </div>
+
+  <div class="post-card__actions">
+    {% if user.is_enthusiast %}
+      {% with is_liked=liked_post_ids|default_if_none:"" %}
+      <button class="action-btn {% if post.pk in liked_post_ids %}liked{% endif %}" id="like-btn-{{ post.pk }}" onclick="toggleLike({{ post.pk }})" title="Like this dish">
+        <span id="like-icon-{{ post.pk }}">{% if post.pk in liked_post_ids %}❤️{% else %}🤍{% endif %}</span>
+        <span id="like-count-{{ post.pk }}">{{ post.like_count }}</span>
+      </button>
+      {% endwith %}
+    {% else %}
+      <span class="action-btn disabled" title="Likes">🤍 {{ post.like_count }}</span>
+    {% endif %}
+
+    <a href="{% url 'post_detail' pk=post.pk %}" class="action-btn" title="View comments">
+      💬 <span>{{ post.comment_count }}</span>
+    </a>
+
+    {% if user == post.restaurant or user.is_staff %}
+      <form method="post" action="{% url 'delete_post' pk=post.pk %}" style="margin-left:auto;" onsubmit="return confirm('Delete {{ post.dish_name }}? This cannot be undone.');">
+        {% csrf_token %}
+        <button type="submit" class="action-btn" style="color:var(--color-error);" title="Delete post">🗑️</button>
+      </form>
+    {% endif %}
+  </div>
+</div>

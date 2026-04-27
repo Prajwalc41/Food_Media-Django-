@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Delete Account — Food Media{% endblock %}
+{% block content %}
+<div class="container">
+  <div style="max-width:480px;margin:40px auto;">
+    <div class="card">
+      <div class="card-body" style="padding:32px;text-align:center;">
+        <div style="font-size:48px;margin-bottom:16px;">⚠️</div>
+        <h1 class="page-title" style="font-size:22px;margin-bottom:12px;">Delete Your Account</h1>
+        <p style="color:#555;font-size:15px;margin-bottom:24px;line-height:1.7;">
+          Deleting your account will permanently erase <strong>ALL</strong> your data including
+          {% if user.is_restaurant %}your {{ posts_count }} post{{ posts_count|pluralize }} and {{ star_rating }}-star rating{% else %}your {{ foodie_points }} Foodie Point{{ foodie_points|pluralize }} and comments{% endif %}.
+          <br><strong>This action CANNOT be undone.</strong>
+        </p>
+
+        <form method="post" id="delete-account-form">
+          {% csrf_token %}
+          <input type="hidden" name="step" value="2">
+
+          <div class="form-group" style="text-align:left;">
+            <label class="form-label" for="id_confirm_text">
+              {% if user.is_restaurant %}
+                This will delete your account, your {{ posts_count }} post{{ posts_count|pluralize }}, and your {{ star_rating }}-star rating. Type <strong>DELETE</strong> to confirm:
+              {% else %}
+                This will delete your account and your {{ foodie_points }} Foodie Point{{ foodie_points|pluralize }} will be lost forever. Type <strong>DELETE</strong> to confirm:
+              {% endif %}
+            </label>
+            <input class="form-control" type="text" name="confirm_text" id="id_confirm_text" placeholder="Type DELETE here" oninput="checkConfirm(this.value)">
+          </div>
+
+          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+            <a href="{% url 'edit_profile' %}" class="btn btn-outline" id="btn-go-back">No, Go Back</a>
+            <button type="submit" class="btn btn-danger" id="btn-confirm-delete-account" disabled>I Understand, Delete My Account</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function checkConfirm(val) {
+  document.getElementById('btn-confirm-delete-account').disabled = (val !== 'DELETE');
+}
+</script>
+{% endblock %}

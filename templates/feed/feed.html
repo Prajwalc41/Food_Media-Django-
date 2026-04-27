@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}Feed — Food Media{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="feed-header">
+    <span class="feed-logo">🍴 Food Media</span>
+    <div class="mode-tabs">
+      <a href="?mode=recent" class="mode-tab {% if mode == 'recent' %}active{% endif %}" id="tab-recent">Recent</a>
+      <a href="?mode=popular" class="mode-tab {% if mode == 'popular' %}active{% endif %}" id="tab-popular">🔥 Popular</a>
+    </div>
+  </div>
+
+  {% if page_obj.object_list %}
+    {% for post in page_obj %}
+      {% include 'partials/post_card.html' %}
+    {% endfor %}
+
+    <div class="pagination">
+      {% if page_obj.has_previous %}
+        <a href="?mode={{ mode }}&page={{ page_obj.previous_page_number }}">← Prev</a>
+      {% endif %}
+      <span class="current">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+        <a href="?mode={{ mode }}&page={{ page_obj.next_page_number }}" id="btn-load-more">Next →</a>
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-state__icon">🍳</div>
+      <p class="empty-state__text">The kitchen is empty! No dishes yet.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

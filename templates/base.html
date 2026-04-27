@@ -1,0 +1,91 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="{% block meta_description %}Food Media — The social network for the culinary world. Discover restaurants, rate dishes, and connect with food lovers.{% endblock %}">
+<title>{% block title %}Food Media{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+
+{% if user.is_authenticated and user.is_staff %}
+<div class="admin-topbar">
+  <span>🍴 <strong>Food Media</strong> — Admin View</span>
+  <div style="display:flex;gap:16px;">
+    <a href="/admin/">Django Admin</a>
+    <a href="{% url 'feed' %}">View Site</a>
+    <form method="post" action="{% url 'logout' %}" style="display:inline;">{% csrf_token %}<button type="submit" style="background:none;border:none;color:#fff;cursor:pointer;font-weight:600;font-size:14px;">Logout</button></form>
+  </div>
+</div>
+{% endif %}
+
+<div class="toast-container" id="toast-container">
+  {% for message in messages %}
+  <div class="toast {{ message.tags }}" role="alert">
+    {% if message.tags == 'success' %}✅{% elif message.tags == 'error' %}❌{% elif message.tags == 'info' %}ℹ️{% else %}⚠️{% endif %}
+    {{ message }}
+  </div>
+  {% endfor %}
+</div>
+
+<main>{% block content %}{% endblock %}</main>
+
+{% if user.is_authenticated and not user.is_staff %}
+<nav class="bottom-nav" role="navigation" aria-label="Main navigation">
+  {% if user.is_enthusiast %}
+    <a href="{% url 'feed' %}" class="nav-tab {% if request.resolver_match.url_name == 'feed' %}active{% endif %}" id="nav-feed">
+      <span class="nav-tab__icon">🏠</span><span>Feed</span>
+    </a>
+    <a href="{% url 'discover' %}" class="nav-tab {% if 'discover' in request.resolver_match.url_name or 'food_history' in request.resolver_match.url_name %}active{% endif %}" id="nav-discover">
+      <span class="nav-tab__icon">🔍</span><span>Discover</span>
+    </a>
+    <a href="{% url 'own_profile' %}" class="nav-tab {% if 'profile' in request.resolver_match.url_name %}active{% endif %}" id="nav-profile">
+      <span class="nav-tab__icon">👤</span><span>Profile</span>
+    </a>
+  {% elif user.is_restaurant %}
+    <a href="{% url 'feed' %}" class="nav-tab {% if request.resolver_match.url_name == 'feed' %}active{% endif %}" id="nav-home">
+      <span class="nav-tab__icon">🏠</span><span>Home</span>
+    </a>
+    <a href="{% url 'my_uploads' %}" class="nav-tab {% if request.resolver_match.url_name == 'my_uploads' %}active{% endif %}" id="nav-uploads">
+      <span class="nav-tab__icon">📁</span><span>My Uploads</span>
+    </a>
+    <a href="{% url 'create_post' %}" class="nav-tab {% if request.resolver_match.url_name == 'create_post' %}active{% endif %}" id="nav-add">
+      <span class="nav-tab__icon">➕</span><span>Add Post</span>
+    </a>
+    <a href="{% url 'restaurant_profile' username=user.username %}" class="nav-tab {% if request.resolver_match.url_name == 'restaurant_profile' %}active{% endif %}" id="nav-profile">
+      <span class="nav-tab__icon">🏪</span><span>Profile</span>
+    </a>
+  {% endif %}
+</nav>
+{% endif %}
+
+<footer class="site-footer">
+  <p>Built with 🍴 by <strong>Prajwal C</strong></p>
+  <p class="footer-sub">Food Media © 2025 | All Rights Reserved</p>
+</footer>
+
+<script>
+// Auto-dismiss toasts
+document.querySelectorAll('.toast').forEach(function(toast) {
+  setTimeout(function() {
+    toast.classList.add('hide');
+    setTimeout(function() { toast.remove(); }, 350);
+  }, 3500);
+});
+
+// CSRF helper
+function getCookie(name) {
+  let v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+  return v ? v[2] : null;
+}
+</script>
+<script src="{% static 'js/feed.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>
